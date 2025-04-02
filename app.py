@@ -7,7 +7,7 @@ import io
 import matplotlib.pyplot as plt
 
 # 📌 **URL base de los archivos en GitHub (versión RAW)**
-GITHUB_BASE_URL = "https://raw.githubusercontent.com/TU_USUARIO/TU_REPOSITORIO/main/"  # 🔹 ¡Cambia esto!
+GITHUB_BASE_URL = "https://raw.githubusercontent.com/JhonF97/APP-EDEQ/main/"  # 🔹 ¡Cambia esto!
 
 # 📌 **Función para cargar archivos desde GitHub**
 def load_github_file(url, is_pickle=False):
