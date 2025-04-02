@@ -56,6 +56,8 @@ for _ in range(6):
 st.title("⚡ ESTIMADOR DEL CONSUMO DE ENERGÍA EN EL QUINDÍO ⚡")
 
 st.write("¡BIENVENIDO! Aquí puedes estimar tu consumo de energía en 2024 y consultar el informe de tu comportamiento energético.")
+st.write("Columnas del DataFrame:", df.columns.tolist())
+
 
 # 📌 **Capturar entrada del usuario**
 venta = st.number_input("Ingrese el valor promedio mensual ($) de su factura de energía:", min_value=0, step=1, format="%d")
