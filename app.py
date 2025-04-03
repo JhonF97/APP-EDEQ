@@ -57,14 +57,24 @@ if st.button("Predecir Consumo"):
     data_pred = pd.DataFrame([fila])
 
     # 📌 **Cargar el scaler para la normalización**
-    scaler_path = os.path.join(GITHUB_BASE_URL, 'Estandarizacion.pkl')
+    import os
+import pickle
+import requests
 
-    if not os.path.exists(scaler_path):
-        st.error(f"❌ Error: No se encontró el archivo {scaler_path}")
-        st.stop()
+GITHUB_RAW_URL = "https://raw.githubusercontent.com/usuario/repositorio/rama/Estandarizacion.pkl"
+scaler_path = "Estandarizacion.pkl"
 
-    with open(scaler_path, 'rb') as f:
-        scaler = pickle.load(f)
+# Descargar el archivo
+response = requests.get(GITHUB_RAW_URL)
+if response.status_code == 200:
+    with open(scaler_path, "wb") as f:
+        f.write(response.content)
+else:
+    raise Exception(f"Error al descargar el archivo: {response.status_code}")
+
+# Cargar el scaler
+with open(scaler_path, "rb") as f:
+    scaler = pickle.load(f)
 
     # 📌 **Aplicar la normalización**
     variables_a_normalizar = data_pred[['VENTA']]
