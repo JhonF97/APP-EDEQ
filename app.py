@@ -26,7 +26,6 @@ def load_github_file(url, is_pickle=False):
 # 📌 **Cargar archivos desde GitHub**
 scaler = load_github_file(GITHUB_BASE_URL + "Estandarizacion.pkl", is_pickle=True)
 trained_KNN = load_github_file(GITHUB_BASE_URL + "Trained_KNN_EDEQ.pkl", is_pickle=True)
-df = load_github_file(GITHUB_BASE_URL + "data_app.csv")
 
 # 📌 **URL de la imagen**
 image_url = "https://www.edeq.com.co/Portals/0/logo-edeq2.png?ver=H4Jt_3kPjOiTcmw9sxiSPA%3D%3D"
