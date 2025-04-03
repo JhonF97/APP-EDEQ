@@ -5,6 +5,7 @@ import numpy as np
 import requests
 import io
 import matplotlib.pyplot as plt
+import os
 
 # 📌 **URL base de los archivos en GitHub (versión RAW)**
 GITHUB_BASE_URL = "https://raw.githubusercontent.com/JhonF97/APP-EDEQ/main/" 
@@ -105,5 +106,86 @@ if st.button("Predecir Consumo"):
         st.error(f"⚠️ Consumo estimado: {resultado} kWh\n🔴 ¡CUIDADO! Su consumo está por ENCIMA del promedio (209.25 kWh).")
     else:
         st.success(f"✅ Consumo estimado: {resultado} kWh\n🟢 ¡Super bien! Su consumo está dentro del rango normal.")
+        
+
+# Diccionario para ordenar los meses
+meses_orden = {"Enero": 1, "Febrero": 2, "Marzo": 3, "Abril": 4, "Mayo": 5, "Junio": 6, "Julio": 7, "Agosto": 8, 
+               "Septiembre": 9, "Octubre": 10, "Noviembre": 11, "Diciembre": 12}
+
+def plot_consumo_cliente(df, cliente_id, periodo):
+    df_cliente = df[df['CLIENTE_ID'] == cliente_id]
+    
+    if periodo == 'Mensual':
+        df_grouped = df.groupby(['AÑO', 'MES'])[['CONSUMO DE ENERGIA (kWh)', 'VALOR FACTURA ($)']].mean().reset_index()
+        df_cliente_grouped = df_cliente.groupby(['AÑO', 'MES'])[['CONSUMO DE ENERGIA (kWh)', 'VALOR FACTURA ($)']].sum().reset_index()
+        df_grouped['MES_ORDEN'] = df_grouped['MES'].map(meses_orden)
+        df_cliente_grouped['MES_ORDEN'] = df_cliente_grouped['MES'].map(meses_orden)
+        df_grouped = df_grouped.sort_values(['AÑO', 'MES_ORDEN'])
+        df_cliente_grouped = df_cliente_grouped.sort_values(['AÑO', 'MES_ORDEN'])
+        df_grouped['Periodo'] = df_grouped['AÑO'].astype(str) + '-' + df_grouped['MES']
+        df_cliente_grouped['Periodo'] = df_cliente_grouped['AÑO'].astype(str) + '-' + df_cliente_grouped['MES']
+    
+    elif periodo == 'Trimestral':
+        df_grouped = df.groupby(['AÑO', 'TRIMESTRE'])[['CONSUMO DE ENERGIA (kWh)', 'VALOR FACTURA ($)']].mean().reset_index()
+        df_cliente_grouped = df_cliente.groupby(['AÑO', 'TRIMESTRE'])[['CONSUMO DE ENERGIA (kWh)', 'VALOR FACTURA ($)']].sum().reset_index()
+        df_grouped['Periodo'] = df_grouped['AÑO'].astype(str) + '-' + df_grouped['TRIMESTRE'].astype(str)
+        df_cliente_grouped['Periodo'] = df_cliente_grouped['AÑO'].astype(str) + '-' + df_cliente_grouped['TRIMESTRE'].astype(str)
+    
+    elif periodo == 'Anual':
+        df_grouped = df.groupby(['AÑO'])[['CONSUMO DE ENERGIA (kWh)', 'VALOR FACTURA ($)']].mean().reset_index()
+        df_cliente_grouped = df_cliente.groupby(['AÑO'])[['CONSUMO DE ENERGIA (kWh)', 'VALOR FACTURA ($)']].sum().reset_index()
+        df_grouped['Periodo'] = df_grouped['AÑO'].astype(str)
+        df_cliente_grouped['Periodo'] = df_cliente_grouped['AÑO'].astype(str)
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(df_grouped['Periodo'], df_grouped['CONSUMO DE ENERGIA (kWh)'], marker='o', linestyle='-', label='Promedio General')
+    ax.plot(df_cliente_grouped['Periodo'], df_cliente_grouped['CONSUMO DE ENERGIA (kWh)'], marker='s', linestyle='--', label=f'Cliente {cliente_id}')
+    
+    ax.set_xlabel('Periodo')
+    ax.set_ylabel('Consumo de Energía (kWh)')
+    ax.set_title(f'Consumo de Energía del Cliente {cliente_id} vs Promedio')
+    ax.legend()
+    ax.set_xticks(range(len(df_grouped)))
+    ax.set_xticklabels(df_grouped['Periodo'], rotation=45)
+    ax.grid()
+    
+    st.pyplot(fig)
+    
+    resumen = pd.merge(df_grouped[['Periodo', 'CONSUMO DE ENERGIA (kWh)']], 
+                        df_cliente_grouped[['Periodo', 'CONSUMO DE ENERGIA (kWh)', 'VALOR FACTURA ($)']], 
+                        on='Periodo', suffixes=('_Promedio', '_Cliente'))
+
+    return resumen.rename(columns={
+        'CONSUMO DE ENERGIA (kWh)_Promedio': 'Consumo Promedio (kWh)',
+        'CONSUMO DE ENERGIA (kWh)_Cliente': 'Consumo Cliente (kWh)',
+        'VALOR FACTURA ($)': 'Valor Factura Cliente ($)'
+    })
 
 
+st.title("¿ Cómo ha sido el comportamiento de su consumo de energía en el último año?🔎")
+cliente_id = st.number_input("Ingrese su número de cuenta EDEQ (Codigo NIU) el cual puedes ubicar en la parte superior derecha de la factura:", min_value=0, step=1)
+periodo = st.selectbox("Seleccione el período que desea analizar:", ['Mensual', 'Trimestral', 'Anual'])
+
+#cargar dataframe
+
+archivo_csv1 = os.path.join(os.getcwd(), 'data_app1.csv')
+archivo_csv2 = os.path.join(os.getcwd(), 'data_app2.csv')
+archivo_csv3 = os.path.join(os.getcwd(), 'data_app3.csv')
+archivo_csv4 = os.path.join(os.getcwd(), 'data_app4.csv')
+archivo_csv5 = os.path.join(os.getcwd(), 'data_app5.csv')
+archivo_csv6 = os.path.join(os.getcwd(), 'data_app6.csv')
+
+# Leer el archivo CSV
+
+df1 = pd.read_csv(archivo_csv1)
+df2 = pd.read_csv(archivo_csv2)
+df3 = pd.read_csv(archivo_csv3)
+df4 = pd.read_csv(archivo_csv4)
+df5 = pd.read_csv(archivo_csv5)
+df6 = pd.read_csv(archivo_csv6)
+
+df = pd.concat([df1, df2, df3, df4, df5, df6], ignore_index=True)
+
+if st.button("Generar Reporte"):
+    resumen = plot_consumo_cliente(df, cliente_id, periodo)
+    st.dataframe(resumen)
